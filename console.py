@@ -19,16 +19,16 @@ class HBNBCommand(cmd.Cmd):
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
-               'BaseModel': BaseModel, 'User': User, 'Place': Place,
-               'State': State, 'City': City, 'Amenity': Amenity,
-               'Review': Review
-              }
+        'BaseModel': BaseModel, 'User': User, 'Place': Place,
+        'State': State, 'City': City, 'Amenity': Amenity,
+        'Review': Review
+    }
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
-             'number_rooms': int, 'number_bathrooms': int,
-             'max_guest': int, 'price_by_night': int,
-             'latitude': float, 'longitude': float
-            }
+        'number_rooms': int, 'number_bathrooms': int,
+        'max_guest': int, 'price_by_night': int,
+        'latitude': float, 'longitude': float
+    }
 
     def preloop(self):
         """Prints if isatty is false"""
@@ -114,36 +114,45 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """Create an object of any class with optional attributes."""
+        """ Create an object of any class"""
         if not args:
             print("** class name missing **")
             return
 
-        args_list = args.split(" ")
-        if args_list[0] not in HBNBCommand.classes:
+        args_list = args.split()
+        class_name = args_list[0]
+
+        if class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
 
-        new_instance = HBNBCommand.classes[args_list[0]]()
+        if len(args_list) < 2:
+            return
 
-        for arg in args_list[1:]:  # Skip the class name
-            key_value = arg.split("=")
-            if len(key_value) == 2:
-                key, value = key_value
-                # Handle strings
-                if value.startswith("\"") and value.endswith("\""):
-                    value = value[1:-1].replace('_', ' ').replace('\\"', '"')
-            # Handle floats and integers
+        new_instance = HBNBCommand.classes[class_name]()
+
+        for arg in args_list[1:]:
+            parameter = arg.split('=')
+            key = parameter[0]
+            value = parameter[1]
+
+            if value.startswith('"'):
+                value = value[1:-1]
+                value = value.replace('"', "\\")
+                value = value.replace("_", " ")
+
+            elif '.' in value:
+                try:
+                    value = float(value)
+                except ValueError:
+                    pass
+
             else:
                 try:
-                    if '.' in value:
-                        value = float(value)
-                    else:
-                        value = int(value)
+                    value = int(value)
                 except ValueError:
-                    # If conversion fails, keep the original value
                     pass
-            # Set the attribute
+
             setattr(new_instance, key, value)
 
         new_instance.save()
@@ -229,12 +238,12 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            objects = storage.all(HBNBCommand.classes[args])
+            for k, v in storage._FileStorage__objects.items():
+                if k.split('.')[0] == args:
+                    print_list.append(str(v))
         else:
-            objects = storage.all()
-
-        for obj in objects.values():
-            print_list.append(str(obj))
+            for k, v in storage._FileStorage__objects.items():
+                print_list.append(str(v))
 
         print(print_list)
 
