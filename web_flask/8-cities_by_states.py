@@ -14,8 +14,7 @@ app = Flask(__name__)
 def cities_by_states():
     """Route handler to display a list of states and their cities."""
     states = storage.all(State)
-    sorted_states = sorted(states.values(), key=lambda state: state.name)
-    return render_template('8-cities_by_states.html', states=sorted_states)
+    return render_template('8-cities_by_states.html', states=states)
 
 
 @app.teardown_appcontext
